@@ -58,6 +58,33 @@ class Queries:
                 
         return json.dumps(json_results, indent=4) 
 
+    # =================================
+    # Gets most popular airports and their corresponding cities
+    # =================================
+    def get_popular_airports(self):
+        mongoCollection = self.db['flights']
+        pipeline = [
+            {"$match": {"CANCELLED": 0}},
+            {"$group": {"_id": "$DESTINATION_AIRPORT", "count": {"$sum": 1}}},
+            {"$lookup": {"from": "airports", "localField": "_id", "foreignField": "IATA_CODE", "as": "airport_info"}},
+            {"$unwind": "$airport_info"},
+            {"$project": {"_id": 1, "airport": "$airport_info.AIRPORT", "city": "$airport_info.CITY", "count": 1}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10}
+        ]
+
+        results = mongoCollection.aggregate(pipeline)
+                
+        json_results = []
+        for result in results:
+            json_results.append({
+                "_id": result['_id'],
+                "airport_name": result['airport'],
+                "city": result['city'], 
+                "flights_count": result['count']
+            })
+                
+        return json.dumps(json_results, indent=4) 
     
 if __name__ == '__main__':
     try:
@@ -66,7 +93,7 @@ if __name__ == '__main__':
 
         queries = Queries(db)
 
-        json = queries.get_airlines_with_no_delays()
+        json = queries.get_popular_airports()
         print(json)
         
     except Exception as e:
