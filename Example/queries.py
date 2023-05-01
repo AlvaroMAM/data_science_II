@@ -7,7 +7,7 @@ from pprint import pprint
 mongoCollection = None
 
 
-def get_puntual_airlines():
+def get_airlines_with_delays():
     mongoCollection = db['flights']
     pipeline = [
     { "$match": { "CANCELLED": 0, "ARRIVAL_DELAY": { "$lte": 0 } } },
@@ -35,7 +35,7 @@ if __name__ == '__main__':
         client = MongoClient('localhost', 27017)
         db = client['data_visualization_project']
 
-        json = get_puntual_airlines()
+        json = get_airlines_with_delays()
         print(json)
     except Exception as e:
         print(e)
