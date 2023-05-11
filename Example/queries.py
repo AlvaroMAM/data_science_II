@@ -217,6 +217,33 @@ class Queries:
                 
         return json.dumps(json_results, indent=4) 
     
+    
+    # =================================
+    # Gets the airlines with most flights that has security delays
+    # =================================
+    def get_airlines_with_security_delays(self):
+        mongoCollection = self.db['flights']
+        pipeline = [
+            { "$match": { "SECURITY_DELAY": {"$gt": 0} } },
+            { "$group": { "_id": "$AIRLINE", "count": {"$sum": 1} } },
+            { "$lookup": { "from": "airlines", "localField": "_id", "foreignField": "IATA_CODE", "as": "airline_info" } },
+            { "$unwind": "$airline_info" },
+            { "$project": { "_id": 1, "airline": "$airline_info.AIRLINE", "count": 1 } },
+            { "$sort": {"count": -1} },
+        ]
+
+        results = mongoCollection.aggregate(pipeline)
+                
+        json_results = []
+        for result in results:
+            json_results.append({
+                "_id": result['_id'],
+                "airline_name": result['airline'],
+                "total_flights_security_delay": result['count']
+            })
+                
+        return json.dumps(json_results, indent=4) 
+    
 if __name__ == '__main__':
     try:
         client = MongoClient('localhost', 27017)
@@ -224,7 +251,7 @@ if __name__ == '__main__':
 
         queries = Queries(db)
 
-        json = queries.get_airlines_with_most_travelled_distance()
+        json = queries.get_airlines_with_security_delays()
         print(json)
         
     except Exception as e:
