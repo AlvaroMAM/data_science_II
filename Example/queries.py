@@ -86,6 +86,33 @@ class Queries:
                 
         return json.dumps(json_results, indent=4) 
     
+    # =================================
+    # Gets airlines with cancelled flights
+    # =================================
+    def get_airlines_with_cancelled_flights(self):
+        mongoCollection = self.db['flights']
+        pipeline = [
+            { "$match": { "CANCELLED": 1 } },
+            { "$group": { "_id": "$AIRLINE", "count": { "$sum": 1 } } },
+            { "$lookup": { "from": "airlines", "localField": "_id", "foreignField": "IATA_CODE", "as": "airline" } },
+            { "$unwind": "$airline" },
+            { "$project": { "_id": 1, "airline_name": "$airline.AIRLINE", "airline_iata_code": "$_id", "count": 1 } },
+            { "$sort": { "count": -1 } }
+        ]
+
+
+        results = mongoCollection.aggregate(pipeline)
+                
+        json_results = []
+        for result in results:
+            json_results.append({
+                "iata_code": result['_id'],
+                "airline_name": result['airline_name'],
+                "cancelled_flights_count": result['count']
+            })
+                
+        return json.dumps(json_results, indent=4) 
+    
 if __name__ == '__main__':
     try:
         client = MongoClient('localhost', 27017)
@@ -93,7 +120,7 @@ if __name__ == '__main__':
 
         queries = Queries(db)
 
-        json = queries.get_popular_airports()
+        json = queries.get_airlines_with_cancelled_flights()
         print(json)
         
     except Exception as e:
