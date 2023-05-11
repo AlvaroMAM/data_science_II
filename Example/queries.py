@@ -112,6 +112,83 @@ class Queries:
             })
                 
         return json.dumps(json_results, indent=4) 
+
+    # =================================
+    # get_airports_with_most_traffic
+    # =================================
+    def get_airports_with_most_traffic(self):
+        mongoCollection = self.db['flights']
+        pipeline_dst = [
+            {"$match": {"CANCELLED": 0}},
+            {"$group": {"_id": "$DESTINATION_AIRPORT", "count": {"$sum": 1}}},
+            {"$lookup": {"from": "airports", "localField": "_id", "foreignField": "IATA_CODE", "as": "airport_info"}},
+            {"$unwind": "$airport_info"},
+            {"$project": {"_id": 1, "airport": "$airport_info.AIRPORT", "city": "$airport_info.CITY", "count": 1}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10}
+        ]
+        
+        pipeline_origin = [
+            {"$match": {"CANCELLED": 0}},
+            {"$group": {"_id": "$ORIGIN_AIRPORT", "count": {"$sum": 1}}},
+            {"$lookup": {"from": "airports", "localField": "_id", "foreignField": "IATA_CODE", "as": "airport_info"}},
+            {"$unwind": "$airport_info"},
+            {"$project": {"_id": 1, "airport": "$airport_info.AIRPORT", "city": "$airport_info.CITY", "count": 1}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10}
+        ]
+
+        destinations = list(db.flights.aggregate(pipeline_dst))
+        origins = list(db.flights.aggregate(pipeline_origin))
+        
+        results = []
+        for dest in destinations:
+            for orig in origins:
+                if dest['_id'] == orig['_id']:
+                    results.append({
+                        '_id': dest['_id'],
+                        'airport': dest['airport'],
+                        'city': dest['city'],
+                        'total_count': dest['count'] + orig['count'],
+                        'destination_count': dest['count'],
+                        'origin_count': orig['count']
+                    })
+                    origins.remove(orig)
+                    break
+            else:
+                results.append({
+                    '_id': dest['_id'],
+                    'airport': dest['airport'],
+                    'city': dest['city'],
+                    'total_count': dest['count'],
+                    'destination_count': dest['count'],
+                    'origin_count': 0
+                })
+
+        for orig in origins:
+            results.append({
+                '_id': orig['_id'],
+                'airport': orig['airport'],
+                'city': orig['city'],
+                'total_count': orig['count'],
+                'destination_count': 0,
+                'origin_count': orig['count']
+            })
+
+        results.sort(key=lambda x: x['total_count'], reverse=True)
+                      
+        json_results = []
+        for result in results:
+            json_results.append({
+                "_id": result['_id'],
+                "airport_name": result['airport'],
+                "city": result['city'], 
+                "total_flights_count": result['total_count'],
+                "destination_count": result['destination_count'],
+                "origin_count": result['origin_count'],
+            })
+            
+        return json.dumps(json_results, indent=4) 
     
 if __name__ == '__main__':
     try:
@@ -120,7 +197,7 @@ if __name__ == '__main__':
 
         queries = Queries(db)
 
-        json = queries.get_airlines_with_cancelled_flights()
+        json = queries.get_airports_with_most_traffic()
         print(json)
         
     except Exception as e:
