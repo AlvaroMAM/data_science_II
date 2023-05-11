@@ -189,6 +189,33 @@ class Queries:
             })
             
         return json.dumps(json_results, indent=4) 
+
+    # =================================
+    # Gets the airlines with most travelled distance
+    # =================================
+    def get_airlines_with_most_travelled_distance(self):
+        mongoCollection = self.db['flights']
+        pipeline = [
+            { "$match": {"CANCELLED": 0, "DISTANCE": {"$exists": True}} },
+            { "$group": { "_id": "$AIRLINE", "total_distance": {"$sum": "$DISTANCE"}}},
+            { "$lookup": { "from": "airlines", "localField": "_id", "foreignField": "IATA_CODE", "as": "airline_info" } },
+            { "$unwind": "$airline_info" },
+            { "$project": {  "_id": 1, "airline": "$airline_info.AIRLINE", "total_distance": 1 }},
+            { "$sort": {"total_distance": -1} },
+        ]
+
+        results = mongoCollection.aggregate(pipeline)
+                
+        json_results = []
+        for result in results:
+            print(result)
+            json_results.append({
+                "_id": result['_id'],
+                "airline_name": result['airline'],
+                "total_distance": result['total_distance']
+            })
+                
+        return json.dumps(json_results, indent=4) 
     
 if __name__ == '__main__':
     try:
@@ -197,7 +224,7 @@ if __name__ == '__main__':
 
         queries = Queries(db)
 
-        json = queries.get_airports_with_most_traffic()
+        json = queries.get_airlines_with_most_travelled_distance()
         print(json)
         
     except Exception as e:
