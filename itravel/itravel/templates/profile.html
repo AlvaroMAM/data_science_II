@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Profile</h1>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    {{ form.name.label }} {{ form.name() }}
+    {{ form.email.label }} {{ form.email() }}
+    {{ form.submit() }}
+</form>
+
+<h2>Favourites</h2>
+<form method="POST">
+    {{ favorites_form.hidden_tag() }}
+    {{ favorites_form.favourites_airlines.label }} {{ favorites_form.favourites_airlines() }}
+    {{ favorites_form.favourites_airports.label }} {{ favorites_form.favourites_airports() }}
+    {{ favorites_form.submit() }}
+</form>
+{% endblock %}
+``

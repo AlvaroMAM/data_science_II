@@ -2,6 +2,12 @@ from database import get_db
 
 class Airport:
     @staticmethod
+    def get_all_airports():
+        db = get_db()
+        airports = db.airports.find()
+        return airports
+    
+    @staticmethod
     def get_airport_by_iata(iata_code):
         db = get_db()
         airport = db.airports.find_one({'IATA_CODE': iata_code})

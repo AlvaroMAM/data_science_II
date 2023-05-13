@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container mt-5">
+        <!-- Panel de filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Filtros</h5>
+                <form action="{{ url_for('main.home') }}" method="POST">
+                    <!-- Aquí puedes agregar los campos de filtro para las aerolíneas y los aeropuertos -->
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Gráficos de Plotly -->
+        <div id="plotly-graph"></div>
+    </div>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        // Aquí puedes agregar el código JavaScript para generar tus gráficos con Plotly
+    </script>
+{% endblock %}
