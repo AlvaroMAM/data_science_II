@@ -1,5 +1,5 @@
-from flask import Flask, render_template, Blueprint, redirect, request, flash
-from flask_login import LoginManager, login_required, logout_user, login_user
+from flask import Flask, render_template, Blueprint, redirect, url_for, request, flash, abort
+from flask_login import LoginManager, login_required, logout_user, login_user, current_user, UserMixin
 from forms import LoginForm, RegisterForm, HomeForm, ProfileForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from database import get_db
@@ -22,7 +22,8 @@ def load_user(user_id):
     return User.get_user_by_id(user_id)
 
 
-@main.route('/')
+@main.route('/', methods=['GET', 'POST'])
+@main.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm(request.form)
     if form.validate_on_submit():
@@ -33,13 +34,12 @@ def login():
         if user and check_password_hash(user['PASSWORD'], form.password.data):
             # If login is correct, we redirect to /home 
             user_logged = UserLogged(user['EMAIL'], user['NAME'], user['SURNAME'], user['ROLE'] ,user['FAVOURITES_AIRPORTS'], user['FAVOURITES_AIRLINES'])
-            login_user(user_logged)
-            flash('You are now logged in', 'success')
+            login_user(user)
             return redirect('/home')
         else:
-            return render_template('index.html', login_form=form)
+            return redirect('/login')
     else:
-        return redirect('/')
+        return render_template('index.html', login_form=form)
 
 @main.route('/logout')
 def logout():
@@ -63,13 +63,14 @@ def register():
             flash('The email is already registered. Please choose a different one')
             return redirect('/register')
     else:
+    
         #User not registered
         return render_template('register.html', register_form=form)
 
 
 @main.route('/profile', methods=['GET', 'POST'])
 @login_required
-def load_profile ():
+def load_profile():
     form = ProfileForm
     if form.validate_on_submit():
         # Proceed the fields, adding or deleting airlines or airports
