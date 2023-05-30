@@ -1,7 +1,65 @@
 {% extends "base.html" %}
+
+{% block head %}
+
+<title title>Profile</title>
+
+<link rel="stylesheet" href="../static/css/profile.css" />
+
+{% endblock %}
+
 {% block content %}
-<h1>Profile</h1>
-<form method="POST">
+
+<div class="title">
+    <h1>Welcome #username</h1>
+</div>
+
+
+<div class="airlines_container">
+
+    <h4 class="airlines_title"> Airlines </h3>
+        
+    <div class="page">
+        <div class="select-dropdown">
+            <select>
+                {% for airline in airlines %}
+                <option value="{{ airline.id }}">{{ airline.airline }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <button id="add_to_favorite" type="button" class="btn btn-primary">Add To Favorites</button>
+
+</div>
+
+<script>
+    window.addEventListener('load', function () {
+        const airlineSelect = document.querySelector('.select-dropdown select');
+
+        document.getElementById('add_to_favorite').addEventListener('click', function() {
+    
+            const selectedAirline = airlineSelect.value;
+    
+            console.log(selectedAirline);
+    
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/favorites");
+            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhr.send(JSON.stringify({
+                id: selectedAirline
+            }));
+    
+            xhr.addEventListener("load", function() {
+                alert("Added To Favorites Successfully!");
+            });
+    
+        });
+    }, false);
+
+</script>
+
+
+{# <form method="POST">
     {{ form.hidden_tag() }}
     {{ form.name.label }} {{ form.name() }}
     {{ form.email.label }} {{ form.email() }}
@@ -14,6 +72,7 @@
     {{ favorites_form.favourites_airlines.label }} {{ favorites_form.favourites_airlines() }}
     {{ favorites_form.favourites_airports.label }} {{ favorites_form.favourites_airports() }}
     {{ favorites_form.submit() }}
-</form>
+#}
+
 {% endblock %}
 ``

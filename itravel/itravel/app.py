@@ -8,6 +8,9 @@ from user_logged import UserLogged
 import plotly
 import plotly.graph_objs as go
 import json
+from queries import Queries
+from airline import Airline, AirlineModel
+from airport import Airport, AirportModel
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'TH1S1SMYS3CR3TK3Y4D4T44N4LYS1S'
@@ -17,29 +20,43 @@ main = Blueprint('main', __name__)
 login_manager= LoginManager()
 login_manager.init_app(app)
 
+airlineObj = Airline()
+airportObj = Airport()
+airlines = []
+airports = []
+
+def addAirlineToFavorites(airline):
+    db = get_db()
+    users_collection = db.users
+    users_collection.update_one(
+        {"EMAIL": "mohammad3pepe@yahoo.com"},
+        {"$push": {"FAVOURITES_AIRLINES": airline.__dict__}}
+    )
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.get_user_by_id(user_id)
 
-
 @main.route('/', methods=['GET', 'POST'])
 @main.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm(request.form)
-    if form.validate_on_submit():
-        db = get_db()
-        users_collection = db.users
-        user = users_collection.find_one({'EMAIL': form.email.data})
-        # Checking login
-        if user and check_password_hash(user['PASSWORD'], form.password.data):
-            # If login is correct, we redirect to /home 
-            user_logged = UserLogged(user['EMAIL'], user['NAME'], user['SURNAME'], user['ROLE'] ,user['FAVOURITES_AIRPORTS'], user['FAVOURITES_AIRLINES'])
-            login_user(user_logged)
-            return redirect('/home')
-        else:
-            return redirect('/login')
-    else:
-        return render_template('index.html', login_form=form)
+    return render_template('home.html')
+
+    # form = LoginForm(request.form)
+    # if form.validate_on_submit():
+    #     db = get_db()
+    #     users_collection = db.users
+    #     user = users_collection.find_one({'EMAIL': form.email.data})
+    #     # Checking login
+    #     if user and check_password_hash(user['PASSWORD'], form.password.data):
+    #         # If login is correct, we redirect to /home 
+    #         user_logged = UserLogged(user['EMAIL'], user['NAME'], user['SURNAME'], user['ROLE'] ,user['FAVOURITES_AIRPORTS'], user['FAVOURITES_AIRLINES'])
+    #         login_user(user_logged)
+    #         return redirect('/home')
+    #     else:
+    #         return redirect('/login')
+    # else:
+    #     return render_template('index.html', login_form=form)
 
 @main.route('/logout')
 def logout():
@@ -67,23 +84,36 @@ def register():
         #User not registered
         return render_template('register.html', register_form=form)
 
-
+@main.route('/favorites', methods=['GET', 'POST'])
+def favorites():
+    if request.method == "POST":
+        id = request.json["id"]
+        ai = airlineObj.get_all_airlines()
+        for airline in ai:
+            if id == str(airline.id):
+                addAirlineToFavorites(airline)
+                break
+        
+        return redirect("/profile")
+    else:
+        return redirect("/profile")
+    
 @main.route('/profile', methods=['GET', 'POST'])
-@login_required
 def load_profile():
-    form = ProfileForm
+    airlines = airlineObj.get_all_airlines()
+    airports = airportObj.get_all_airports
+    form = ProfileForm()
     if form.validate_on_submit():
         # Proceed the fields, adding or deleting airlines or airports
         db = get_db()
         pass
-        return render_template('profile.html', profile_form=form)
+        return render_template('profile.html', profile_form=form, airlines=airlines, airports=airports) 
     else:
         # We load the form to add/delete favourites airlines or airports, the form to delete user, the form to update user
         pass
-        return render_template('profile.html', profile_form=form) 
+        return render_template('profile.html', profile_form=form, airlines=airlines, airports=airports) 
 
 @main.route('/home', methods=['GET', 'POST'])
-@login_required
 def home():
     form = HomeForm()
     if form.validate_on_submit():
