@@ -1,0 +1,87 @@
+* {
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+        Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: 'Roboto Slab', sans-serif;
+    background-color: #fff;
+    color: #121212;
+}
+
+.title {
+    padding: 20px;
+    text-align: center;
+    background-color: #EAEFF2;
+    margin-bottom: 20px;
+}
+
+.title h1 {
+    text-align: center;
+    font-size: 30px;
+    width: 80%;
+    margin: auto;
+    margin-bottom: 20px;
+}
+
+.airlines_container {
+    margin: auto;
+    padding: 20px;
+    background-color: white;
+    width: 25%;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+
+.airlines_title {
+    color: black;
+    margin-bottom: 10px;
+    line-height: 30px;
+}
+
+.page {
+    float: left;
+    margin-right: 10px;
+}
+
+.select-dropdown {
+    position: relative;
+    background-color: #e6e6e6;
+    width: auto;
+    max-width: 250px;
+    border-radius: 2px;
+}
+
+.select-dropdown select {
+    font-family: "helvetica neue", helvetica;
+    font-size: 1rem;
+    font-weight: 200;
+    max-width: 100%;
+    padding: 8px 24px 8px 10px;
+    border: none;
+    background-color: transparent;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.select-dropdown select:active,
+.select-dropdown select:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.select-dropdown:after {
+    content: " ";
+    position: absolute;
+    top: 50%;
+    margin-top: -2px;
+    right: 8px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #aaa;
+}
