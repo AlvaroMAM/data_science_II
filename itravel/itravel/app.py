@@ -34,7 +34,7 @@ def login():
         if user and check_password_hash(user['PASSWORD'], form.password.data):
             # If login is correct, we redirect to /home 
             user_logged = UserLogged(user['EMAIL'], user['NAME'], user['SURNAME'], user['ROLE'] ,user['FAVOURITES_AIRPORTS'], user['FAVOURITES_AIRLINES'])
-            login_user(user)
+            login_user(user_logged)
             return redirect('/home')
         else:
             return redirect('/login')
