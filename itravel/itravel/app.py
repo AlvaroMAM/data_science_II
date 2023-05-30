@@ -28,10 +28,22 @@ airports = []
 def addAirlineToFavorites(airline):
     db = get_db()
     users_collection = db.users
-    users_collection.update_one(
-        {"EMAIL": "mohammad3pepe@yahoo.com"},
-        {"$push": {"FAVOURITES_AIRLINES": airline.__dict__}}
-    )
+    fav_exists = False
+    existing_user = users_collection.find_one({'EMAIL' : "mohammad3pepe@yahoo.com"})
+    existing_fav = existing_user["FAVOURITES_AIRLINES"]
+    for item in existing_fav:
+        print(item["id"])
+        if str(item["id"]) == str(airline.id):
+            fav_exists = True
+            break
+    if fav_exists is False:
+        print("does not exist")
+        users_collection.update_one(
+            {"EMAIL": "mohammad3pepe@yahoo.com"},
+            {"$push": {"FAVOURITES_AIRLINES": airline.__dict__}}
+        )
+    else:
+        print("Already exists")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -101,11 +113,10 @@ def favorites():
 @main.route('/profile', methods=['GET', 'POST'])
 def load_profile():
     airlines = airlineObj.get_all_airlines()
-    airports = airportObj.get_all_airports
+    airports = airportObj.get_all_airports()
     form = ProfileForm()
     if form.validate_on_submit():
         # Proceed the fields, adding or deleting airlines or airports
-        db = get_db()
         pass
         return render_template('profile.html', profile_form=form, airlines=airlines, airports=airports) 
     else:
