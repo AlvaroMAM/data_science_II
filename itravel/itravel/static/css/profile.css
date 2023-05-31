@@ -26,35 +26,45 @@ body {
     margin-bottom: 20px;
 }
 
-.airlines_container {
-    margin: auto;
+.ccc {
+    text-align: center;
+}
+
+.airlines_container,
+.airlports_container {
+    display: inline-block;
+    vertical-align: top;  
+    margin: 0 10px 0 10px;  
     padding: 20px;
     background-color: white;
-    width: 25%;
+    width: 40%;
     border-radius: 10px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
 }
 
-.airlines_title {
+.airlines_title,
+.airlports_title {
     color: black;
     margin-bottom: 10px;
     line-height: 30px;
 }
 
 .page {
-    float: left;
+    display: inline-block;
     margin-right: 10px;
 }
 
-.select-dropdown {
-    position: relative;
+.select-dropdown, 
+.select-dropdown2 {
+    display: inline-block;
     background-color: #e6e6e6;
     width: auto;
     max-width: 250px;
     border-radius: 2px;
 }
 
-.select-dropdown select {
+.select-dropdown select, 
+.select-dropdown2 select {
     font-family: "helvetica neue", helvetica;
     font-size: 1rem;
     font-weight: 200;
@@ -68,12 +78,15 @@ body {
 }
 
 .select-dropdown select:active,
-.select-dropdown select:focus {
+.select-dropdown select:focus, 
+.select-dropdown2 select:active, 
+.select-dropdown2 select:focus{
     outline: none;
     box-shadow: none;
 }
 
-.select-dropdown:after {
+.select-dropdown:after, 
+.select-dropdown2:after {
     content: " ";
     position: absolute;
     top: 50%;
@@ -89,15 +102,24 @@ body {
 .fav_airlines_title {
     padding: 20px;
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 30px;
+    margin-top: 20px;
 }
 
-.fav_airlines_title h1 {
+.fav_airports_title {
+    padding: 20px;
     text-align: center;
-    font-size: 30px;
+    margin-bottom: 30px;
+    margin-top: 40px;
+}
+
+.fav_airlines_title p,
+.fav_airports_title p {
+    text-align: center;
+    font-size: 25px;
+    font-weight: 600;
     width: 80%;
     margin: auto;
-    margin-bottom: 20px;
 }
 
 .grid {
@@ -131,6 +153,26 @@ body {
     color: #598BAF;
     margin-top: -10px;
     margin-left: 37px;
+}
+
+.grid-cards .gridc-cards-inner .fav_airport {
+    font-size: 18px;
+}
+
+.grid-cards .gridc-cards-inner .airport_iata_code {
+    display: inline-block;
+    font-size: 22px;
+    font-weight: 700;
+    color: #598BAF;
+    margin-top: -10px;
+    margin-left: 37px;
+}
+
+.grid-cards .gridc-cards-inner .airport_city {
+    display: inline-block;
+    font-size: 18px;
+    margin-top: -10px;
+    margin-left: 10px;
 }
 
 .plane-icon {

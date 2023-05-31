@@ -45,6 +45,25 @@ def addAirlineToFavorites(airline):
     else:
         print("Already exists")
 
+def addAirportToFavorites(airport):
+    db = get_db()
+    users_collection = db.users
+    fav_exists = False
+    existing_user = users_collection.find_one({'EMAIL' : "mohammad3pepe@yahoo.com"})
+    existing_fav = existing_user["FAVOURITES_AIRPORTS"]
+    for item in existing_fav:
+        if str(item["id"]) == str(airport.id):
+            fav_exists = True
+            break
+    if fav_exists is False:
+        print("does not exist")
+        users_collection.update_one(
+            {"EMAIL": "mohammad3pepe@yahoo.com"},
+            {"$push": {"FAVOURITES_AIRPORTS": airport.__dict__}}
+        )
+    else:
+        print("Already exists")
+        
 @login_manager.user_loader
 def load_user(user_id):
     return User.get_user_by_id(user_id)
@@ -96,27 +115,49 @@ def register():
         #User not registered
         return render_template('register.html', register_form=form)
 
-@main.route('/favorites', methods=['GET', 'POST'])
+@main.route('/favorites/airlines', methods=['POST'])
 def favorites():
-    if request.method == "POST":
-        id = request.json["id"]
-        ai = airlineObj.get_all_airlines()
-        for airline in ai:
-            if id == str(airline.id):
-                addAirlineToFavorites(airline)
-                break
+    id = request.json["id"]
+    ai = airlineObj.get_all_airlines()
+    for airline in ai:
+        if id == str(airline.id):
+            addAirlineToFavorites(airline)
+            break
         
-        return redirect(url_for('main.load_profile'))
-    else:
-        return redirect(url_for('main.load_profile'))
+    return redirect(url_for('main.load_profile'))
     
-@app.route("/favorites/delete")
+@main.route('/favorites/airports', methods=['POST'])
+def favorites_airports():
+    id = request.json["id"]
+    ai = airportObj.get_all_airports()
+    print(id)
+    for airport in ai:
+        if id == str(airport.id):
+            addAirportToFavorites(airport)
+            break
+        
+    return redirect(url_for('main.load_profile'))
+   
+@app.route("/favorites/airlines/delete")
 def deleteFavoriteAirline():
     id = request.args.get("id")
     db = get_db()
     users_collection = db.users
     query = {"EMAIL": "mohammad3pepe@yahoo.com"}
     update = {"$pull": {"FAVOURITES_AIRLINES": {"id": ObjectId(id)}}}
+
+    # Perform the update operation
+    users_collection.update_one(query, update)
+    
+    return redirect(url_for('main.load_profile'))
+
+@app.route("/favorites/airports/delete")
+def deleteFavoriteAirport():
+    id = request.args.get("id")
+    db = get_db()
+    users_collection = db.users
+    query = {"EMAIL": "mohammad3pepe@yahoo.com"}
+    update = {"$pull": {"FAVOURITES_AIRPORTS": {"id": ObjectId(id)}}}
 
     # Perform the update operation
     users_collection.update_one(query, update)
@@ -136,16 +177,14 @@ def load_profile():
         # We load the form to add/delete favourites airlines or airports, the form to delete user, the form to update user
         db = get_db()
         users_collection = db.users
-        
-        # Retrieve the updated user object after the deletion
 
         existing_user = users_collection.find_one({'EMAIL': 'mohammad3pepe@yahoo.com'})
-        print("Updated FAVOURITES_AIRLINES length:", len(existing_user["FAVOURITES_AIRLINES"]))
         
         return render_template('profile.html', profile_form=form, 
-                               airlines=airlines,
-                               airports=airports,
-                               fav_airlines=existing_user["FAVOURITES_AIRLINES"])
+                               airlines=sorted(airlines, key=lambda x: x.airline),
+                               airports=sorted(airports, key=lambda x: x.airport),
+                               fav_airlines=existing_user["FAVOURITES_AIRLINES"],
+                               fav_airports=existing_user["FAVOURITES_AIRPORTS"])
 
 @main.route('/home', methods=['GET', 'POST'])
 def home():
