@@ -11,6 +11,7 @@ import json
 from queries import Queries
 from airline import Airline, AirlineModel
 from airport import Airport, AirportModel
+from bson import ObjectId
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'TH1S1SMYS3CR3TK3Y4D4T44N4LYS1S'
@@ -32,7 +33,6 @@ def addAirlineToFavorites(airline):
     existing_user = users_collection.find_one({'EMAIL' : "mohammad3pepe@yahoo.com"})
     existing_fav = existing_user["FAVOURITES_AIRLINES"]
     for item in existing_fav:
-        print(item["id"])
         if str(item["id"]) == str(airline.id):
             fav_exists = True
             break
@@ -106,10 +106,23 @@ def favorites():
                 addAirlineToFavorites(airline)
                 break
         
-        return redirect("/profile")
+        return redirect(url_for('main.load_profile'))
     else:
-        return redirect("/profile")
+        return redirect(url_for('main.load_profile'))
     
+@app.route("/favorites/delete")
+def deleteFavoriteAirline():
+    id = request.args.get("id")
+    db = get_db()
+    users_collection = db.users
+    query = {"EMAIL": "mohammad3pepe@yahoo.com"}
+    update = {"$pull": {"FAVOURITES_AIRLINES": {"id": ObjectId(id)}}}
+
+    # Perform the update operation
+    users_collection.update_one(query, update)
+    
+    return redirect(url_for('main.load_profile'))
+
 @main.route('/profile', methods=['GET', 'POST'])
 def load_profile():
     airlines = airlineObj.get_all_airlines()
@@ -121,8 +134,18 @@ def load_profile():
         return render_template('profile.html', profile_form=form, airlines=airlines, airports=airports) 
     else:
         # We load the form to add/delete favourites airlines or airports, the form to delete user, the form to update user
-        pass
-        return render_template('profile.html', profile_form=form, airlines=airlines, airports=airports) 
+        db = get_db()
+        users_collection = db.users
+        
+        # Retrieve the updated user object after the deletion
+
+        existing_user = users_collection.find_one({'EMAIL': 'mohammad3pepe@yahoo.com'})
+        print("Updated FAVOURITES_AIRLINES length:", len(existing_user["FAVOURITES_AIRLINES"]))
+        
+        return render_template('profile.html', profile_form=form, 
+                               airlines=airlines,
+                               airports=airports,
+                               fav_airlines=existing_user["FAVOURITES_AIRLINES"])
 
 @main.route('/home', methods=['GET', 'POST'])
 def home():
