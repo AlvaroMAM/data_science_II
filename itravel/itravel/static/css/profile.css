@@ -217,25 +217,12 @@ body {
     justify-content: center;
     align-items: center;
     text-align: center;
-    min-height: 40vh;
-}
-
-.empty_state img {
-    margin: auto;
-    margin-bottom: 0px;
-    font-size: 90px;
-    color: #ccc;
+    min-height: 10vh;
 }
 
 .empty_state h3 {
+    color: lightgray;
     margin: 8px 0px;
     text-align: center;
     font-weight: normal;
-}
-
-.empty_state p {
-    font-size: 14px;
-    margin: 0px;
-    color: #999;
-    text-align: center;
 }

@@ -61,8 +61,7 @@
 
 {% if fav_airlines |count == 0 %}
 <div class="empty_state">
-    <img src="static/images/sad.png" alt="">
-    <h3 class="empty-state-title">No Favorites Yet!</h3>
+    <h3 class="empty-state-title">No Favorite Airlines Yet</h3>
   </div>
 {% else %}
 
@@ -96,6 +95,12 @@
     <p> Favorites Airports </p>
 </div>
 
+{% if fav_airports |count == 0 %}
+<div class="empty_state">
+    <h3 class="empty-state-title">No Favorite Airports Yet</h3>
+  </div>
+{% else %}
+
 <div class="grid">
     <div class="grid-cards">
 
@@ -119,6 +124,7 @@
 
     </div>
 </div>
+{% endif %}
 
 <br>
 
