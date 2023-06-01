@@ -7,6 +7,7 @@ from user import User
 from user_logged import UserLogged
 import plotly
 import plotly.graph_objs as go
+import plotly.express as px
 import json
 from queries import Queries
 from airline import Airline, AirlineModel
@@ -21,10 +22,16 @@ main = Blueprint('main', __name__)
 login_manager= LoginManager()
 login_manager.init_app(app)
 
+queryManager = Queries()
 airlineObj = Airline()
 airportObj = Airport()
 airlines = []
 airports = []
+queriesDone = False
+airlines_no_delays = []
+filtered_json_arr = None
+
+get_filtered_json_arr = False
 
 def addAirlineToFavorites(airline):
     db = get_db()
@@ -63,7 +70,48 @@ def addAirportToFavorites(airport):
         )
     else:
         print("Already exists")
-        
+
+
+def getAirlinesFigures(items1, items2, items3, items4):
+    # Create charts 
+    fig_delays = go.Figure(data=go.Bar(x=list(map(lambda obj: str(obj["airline_name"]), items1)),
+                                y=list(map(lambda obj: str(obj["avg_arrival_delay"]), items1)) 
+                                ))
+    fig_delays.update_layout(title='Airlines with Most Delays',xaxis_title='Airlines',
+        yaxis_title='Delays', barmode='stack' )
+    airlines_delays_chart_json = fig_delays.to_json()
+
+    fig_security_delays = go.Figure(data=go.Bar(x=list(map(lambda obj: str(obj["airline_name"]), items2)),
+                                y=list(map(lambda obj: str(obj["total_flights_security_delay"]), items2)) 
+                                ))
+    fig_security_delays.update_layout(title='Airlines with Most Number of Flights with Security Delays', xaxis_title='Airlines',
+        yaxis_title='Total Number of Flights', barmode='stack' )
+    airlines_security_delays_chart_json = fig_security_delays.to_json()
+
+    fig_cancelled_flights = go.Figure(data=go.Bar(x=list(map(lambda obj: str(obj["airline_name"]), items3)),
+                                y=list(map(lambda obj: str(obj["cancelled_flights_count"]), items3)) 
+                                ))
+    fig_cancelled_flights.update_layout(title='Airlines with Most Canceled Flights', xaxis_title='Airlines',
+        yaxis_title='Canceled Flights Number', barmode='stack' )
+    airlines_cancelled_flights_chart_json = fig_cancelled_flights.to_json()
+    
+    fig_most_travelled_distance = go.Figure(data=go.Scatter(x=list(map(lambda obj: str(obj["airline_name"]), items4)),
+                                y=list(map(lambda obj: str(obj["total_distance"]), items4)) 
+                                ))
+    fig_most_travelled_distance.update_layout(title='Airlines with Most Travelled Distance', xaxis_title='Airlines',
+        yaxis_title='Total Travelled Distance', barmode='stack' )
+    airlines_most_travelled_distance_chart_json = fig_most_travelled_distance.to_json()
+    
+    
+    json_arr = []
+    json_arr.append(airlines_delays_chart_json)
+    json_arr.append(airlines_security_delays_chart_json)
+    json_arr.append(airlines_cancelled_flights_chart_json)
+    json_arr.append(airlines_most_travelled_distance_chart_json)
+    
+    return json_arr
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.get_user_by_id(user_id)
@@ -166,8 +214,10 @@ def deleteFavoriteAirport():
 
 @main.route('/profile', methods=['GET', 'POST'])
 def load_profile():
+    
     airlines = airlineObj.get_all_airlines()
     airports = airportObj.get_all_airports()
+
     form = ProfileForm()
     if form.validate_on_submit():
         # Proceed the fields, adding or deleting airlines or airports
@@ -189,15 +239,56 @@ def load_profile():
 @main.route('/home', methods=['GET', 'POST'])
 def home():
     form = HomeForm()
-    if form.validate_on_submit():
-        # We apply the filters and execute the queries
-        db = get_db()
-        pass
+    
+    # if form.validate_on_submit():
+    #     # We apply the filters and execute the queries
+    #     db = get_db()
+    #     pass
+    # else:
+    #     # Apply queries with favourite airports and airlines
+    #     pass
+    
+    db = get_db()
+    users_collection = db.users
+    existing_user = users_collection.find_one({'EMAIL': 'mohammad3pepe@yahoo.com'})
+    global filtered_json_arr
+    global queriesDone
+    if not queriesDone:
+        print("Perfrom Queries")
+        queryManager.perform_airlines_queries(existing_user["FAVOURITES_AIRLINES"])
+        queriesDone = True
+    print("Hello")
+    if filtered_json_arr is None: 
+        json_arr = getAirlinesFigures(queryManager.airlines_delays,
+                                    queryManager.airlines_security_delays,
+                                    queryManager.airlines_with_cancelled_flights,
+                                    queryManager.airlines_with_most_travelled_distance)
+        no_delays = queryManager.airlines_no_delays
     else:
-        # Apply queries with favourite airports and airlines
-        pass
-    return render_template('home.html', register_form=form)
+        json_arr = filtered_json_arr
+        no_delays=airlines_no_delays
+    # json_arr=[]
+    return render_template('home.html', register_form=form,
+                           fav_airlines=existing_user["FAVOURITES_AIRLINES"],
+                           queries_done=queriesDone,
+                           json_arr=json_arr,
+                           airlines_no_delays=no_delays)
 
+@main.route('/home/airlines/filter', methods=['POST'])
+def filtered_home_airlines():
+    print("Hello world")
+    ids = request.json["ids"]
+
+    f1, f2, f3, f4, f5 = queryManager.filter_airlines_queries(ids)
+    
+    global filtered_json_arr
+    global airlines_no_delays
+    
+    filtered_json_arr = getAirlinesFigures(f1,f2,f3,f4)
+    airlines_no_delays = f5
+    return redirect(url_for('main.home'))
+    
+    
 # Register the blueprint
 app.register_blueprint(main)
 
