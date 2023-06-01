@@ -48,16 +48,34 @@ class Queries:
     # Gets the airlines with no delays
     # =================================
     def get_airlines_with_no_delays(self):
-        mongoCollection = self.db.flights
+        mongoCollection = self.db
         pipeline = [
             {"$match": {"CANCELLED": 0, "ARRIVAL_DELAY": 0}},
             {"$group": {"_id": "$AIRLINE"}},
             {"$lookup": {"from": "airlines", "localField": "_id", "foreignField": "IATA_CODE", "as": "airline_info"}},
             {"$project": {"airline_name": {"$arrayElemAt": ["$airline_info.AIRLINE", 0]}, "_id": 1}}
         ]
-
-        results = mongoCollection.aggregate(pipeline)
-                
+        
+        db = get_db()
+        users_collection = db.users
+        fav_airliens = users_collection.find()[0]['FAVOURITES_AIRLINES']
+        
+        flights = db['flights_processed'].find({
+            "$or": [
+                {"CANCELLED": 1},  # Vuelos cancelados
+                {"ARRIVAL_DELAY": {"$gt": 0}}  # Vuelos con retraso
+            ]
+        }, {"AIRLINE": 1})
+        
+        unique_airlines = set()
+        for flight in flights:
+            unique_airlines.add(flight["AIRLINE"])
+            
+        results = []
+        for airline in fav_airliens:
+            if airline["iata_code"] in unique_airlines:
+                results.add(airline)
+        
         json_results = []
         for result in results:
             if result['_id'] in self.fav_airlines_iata:
@@ -243,7 +261,7 @@ class Queries:
             { "$lookup": { "from": "airlines", "localField": "_id", "foreignField": "IATA_CODE", "as": "airline_info" } },
             { "$unwind": "$airline_info" },
             { "$project": { "_id": 1, "airline": "$airline_info.AIRLINE", "count": 1 } },
-            { "$sort": {"count": -1} },
+            { "$sort": {"count": 1} },
         ]
 
         results = mongoCollection.aggregate(pipeline)
@@ -273,11 +291,13 @@ class Queries:
         
     def perform_airports_queries(self, airports):
         self.fav_airports_iata = []
+
         for item in airports:
             self.fav_airports_iata.append(str(item["iata_code"]))
-            
+        
         self.popular_airports = self.get_popular_airports()
         self.airports_with_most_traffic = self.get_airports_with_most_traffic()
+        print(self.airports_with_most_traffic)
         
     def filter_airlines_queries(self, ids):
         filtered1 = []
@@ -308,3 +328,18 @@ class Queries:
                 filtered5.append(airline)
                 
         return filtered1, filtered2, filtered3, filtered4, filtered5
+
+    def filter_airports_queries(self, ids):
+        filtered1 = []
+        filtered2 = []
+
+        for airport in self.popular_airports:
+            if airport["_id"] in ids:
+                filtered1.append(airport)
+                
+        for airport in self.airports_with_most_traffic:
+            if airport["_id"] in ids:
+                filtered2.append(airport)
+                
+                
+        return filtered1, filtered2

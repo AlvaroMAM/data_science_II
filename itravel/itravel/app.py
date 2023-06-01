@@ -28,16 +28,26 @@ airportObj = Airport()
 airlines = []
 airports = []
 queriesDone = False
+queriesAirportsDone = False
 airlines_no_delays = []
 filtered_json_arr = None
-
+filtered_airports_json_arr = None
+current_user_email = ""
 get_filtered_json_arr = False
+
+popular_airports_json = None
+most_traffic_airports_json = None
+
+checked_airlines_arr = []
+checked_airports_arr = []
+updated_airlines_fav = False
+updated_airports_fav = False
 
 def addAirlineToFavorites(airline):
     db = get_db()
     users_collection = db.users
     fav_exists = False
-    existing_user = users_collection.find_one({'EMAIL' : "mohammad3pepe@yahoo.com"})
+    existing_user = users_collection.find_one({'EMAIL' : current_user_email})
     existing_fav = existing_user["FAVOURITES_AIRLINES"]
     for item in existing_fav:
         if str(item["id"]) == str(airline.id):
@@ -46,7 +56,7 @@ def addAirlineToFavorites(airline):
     if fav_exists is False:
         print("does not exist")
         users_collection.update_one(
-            {"EMAIL": "mohammad3pepe@yahoo.com"},
+            {"EMAIL": current_user_email},
             {"$push": {"FAVOURITES_AIRLINES": airline.__dict__}}
         )
     else:
@@ -56,7 +66,7 @@ def addAirportToFavorites(airport):
     db = get_db()
     users_collection = db.users
     fav_exists = False
-    existing_user = users_collection.find_one({'EMAIL' : "mohammad3pepe@yahoo.com"})
+    existing_user = users_collection.find_one({'EMAIL' : current_user_email})
     existing_fav = existing_user["FAVOURITES_AIRPORTS"]
     for item in existing_fav:
         if str(item["id"]) == str(airport.id):
@@ -65,7 +75,7 @@ def addAirportToFavorites(airport):
     if fav_exists is False:
         print("does not exist")
         users_collection.update_one(
-            {"EMAIL": "mohammad3pepe@yahoo.com"},
+            {"EMAIL": current_user_email},
             {"$push": {"FAVOURITES_AIRPORTS": airport.__dict__}}
         )
     else:
@@ -95,11 +105,11 @@ def getAirlinesFigures(items1, items2, items3, items4):
         yaxis_title='Canceled Flights Number', barmode='stack' )
     airlines_cancelled_flights_chart_json = fig_cancelled_flights.to_json()
     
-    fig_most_travelled_distance = go.Figure(data=go.Scatter(x=list(map(lambda obj: str(obj["airline_name"]), items4)),
+    fig_most_travelled_distance = go.Figure(data=go.Bar(x=list(map(lambda obj: str(obj["airline_name"]), items4)),
                                 y=list(map(lambda obj: str(obj["total_distance"]), items4)) 
                                 ))
     fig_most_travelled_distance.update_layout(title='Airlines with Most Travelled Distance', xaxis_title='Airlines',
-        yaxis_title='Total Travelled Distance', barmode='stack' )
+        yaxis_title='Total Travelled Distance', barmode='group' )
     airlines_most_travelled_distance_chart_json = fig_most_travelled_distance.to_json()
     
     
@@ -111,31 +121,55 @@ def getAirlinesFigures(items1, items2, items3, items4):
     
     return json_arr
 
+def getAirportsFigures(items1, items2):
+    fig_popular = go.Figure(data=go.Bar(x=list(map(lambda obj: str(obj["airport_name"]), items1)),
+                                y=list(map(lambda obj: str(obj["flights_count"]), items1)) 
+                                ))
+    fig_popular.update_layout(title='Most Popular Airports',xaxis_title='Airports',
+        yaxis_title='Number of Flights', barmode='stack' )
+    
+    popular_airports_chart_json = fig_popular.to_json()
+
+    # Crear listas de datos
+    airports = [d['airport_name'] for d in items2]
+    destination_counts = [d['destination_count'] for d in items2]
+    origin_counts = [d['origin_count'] for d in items2]
+
+    # Crear traza para 'destination_count'
+    trace1 = go.Scatter(
+        x=airports,
+        y=destination_counts,
+        mode='lines',
+        name='Destination Counts',
+        line=dict(color='blue')
+    )
+
+    # Crear traza para 'origin_count'
+    trace2 = go.Scatter(
+        x=airports,
+        y=origin_counts,
+        mode='lines',
+        name='Origin Counts',
+        line=dict(color='red')
+    )
+
+    # Agregar las trazas a la gráfica
+    data = [trace1, trace2]
+
+    # Crear el layout de la gráfica
+    layout = go.Layout(
+        title='Counts by Airport',
+        xaxis=dict(title='Airport'),
+        yaxis=dict(title='Count')
+    )
+
+    most_traffic = go.Figure(data=data, layout=layout).to_json()
+    
+    return popular_airports_chart_json, most_traffic
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.get_user_by_id(user_id)
-
-@main.route('/', methods=['GET', 'POST'])
-@main.route('/login', methods=['GET', 'POST'])
-def login():
-    return render_template('home.html')
-
-    # form = LoginForm(request.form)
-    # if form.validate_on_submit():
-    #     db = get_db()
-    #     users_collection = db.users
-    #     user = users_collection.find_one({'EMAIL': form.email.data})
-    #     # Checking login
-    #     if user and check_password_hash(user['PASSWORD'], form.password.data):
-    #         # If login is correct, we redirect to /home 
-    #         user_logged = UserLogged(user['EMAIL'], user['NAME'], user['SURNAME'], user['ROLE'] ,user['FAVOURITES_AIRPORTS'], user['FAVOURITES_AIRLINES'])
-    #         login_user(user_logged)
-    #         return redirect('/home')
-    #     else:
-    #         return redirect('/login')
-    # else:
-    #     return render_template('index.html', login_form=form)
 
 @main.route('/logout')
 def logout():
@@ -170,6 +204,8 @@ def favorites():
     for airline in ai:
         if id == str(airline.id):
             addAirlineToFavorites(airline)
+            global updated_airlines_fav
+            updated_airlines_fav = True
             break
         
     return redirect(url_for('main.load_profile'))
@@ -182,8 +218,10 @@ def favorites_airports():
     for airport in ai:
         if id == str(airport.id):
             addAirportToFavorites(airport)
+            global updated_airports_fav
+            updated_airports_fav = True
             break
-        
+
     return redirect(url_for('main.load_profile'))
    
 @app.route("/favorites/airlines/delete")
@@ -191,11 +229,14 @@ def deleteFavoriteAirline():
     id = request.args.get("id")
     db = get_db()
     users_collection = db.users
-    query = {"EMAIL": "mohammad3pepe@yahoo.com"}
+    query = {"EMAIL": current_user_email}
     update = {"$pull": {"FAVOURITES_AIRLINES": {"id": ObjectId(id)}}}
 
     # Perform the update operation
     users_collection.update_one(query, update)
+    
+    global updated_airlines_fav
+    updated_airlines_fav = True
     
     return redirect(url_for('main.load_profile'))
 
@@ -204,60 +245,56 @@ def deleteFavoriteAirport():
     id = request.args.get("id")
     db = get_db()
     users_collection = db.users
-    query = {"EMAIL": "mohammad3pepe@yahoo.com"}
+    query = {"EMAIL": current_user_email}
     update = {"$pull": {"FAVOURITES_AIRPORTS": {"id": ObjectId(id)}}}
 
     # Perform the update operation
     users_collection.update_one(query, update)
-    
+    global updated_airports_fav
+    updated_airports_fav = True
     return redirect(url_for('main.load_profile'))
 
 @main.route('/profile', methods=['GET', 'POST'])
 def load_profile():
+    db = get_db()
+    users_collection = db.users
+    current_user_email = users_collection.find()[0]['EMAIL']
     
     airlines = airlineObj.get_all_airlines()
     airports = airportObj.get_all_airports()
-
-    form = ProfileForm()
-    if form.validate_on_submit():
-        # Proceed the fields, adding or deleting airlines or airports
-        pass
-        return render_template('profile.html', profile_form=form, airlines=airlines, airports=airports) 
-    else:
-        # We load the form to add/delete favourites airlines or airports, the form to delete user, the form to update user
-        db = get_db()
-        users_collection = db.users
-
-        existing_user = users_collection.find_one({'EMAIL': 'mohammad3pepe@yahoo.com'})
+    existing_user = users_collection.find_one({'EMAIL': current_user_email})
         
-        return render_template('profile.html', profile_form=form, 
-                               airlines=sorted(airlines, key=lambda x: x.airline),
-                               airports=sorted(airports, key=lambda x: x.airport),
-                               fav_airlines=existing_user["FAVOURITES_AIRLINES"],
-                               fav_airports=existing_user["FAVOURITES_AIRPORTS"])
+    return render_template('profile.html',
+                            airlines=sorted(airlines, key=lambda x: x.airline),
+                            airports=sorted(airports, key=lambda x: x.airport),
+                            fav_airlines=existing_user["FAVOURITES_AIRLINES"],
+                            fav_airports=existing_user["FAVOURITES_AIRPORTS"])
 
+@main.route('/', methods=['GET', 'POST'])
 @main.route('/home', methods=['GET', 'POST'])
 def home():
     form = HomeForm()
-    
-    # if form.validate_on_submit():
-    #     # We apply the filters and execute the queries
-    #     db = get_db()
-    #     pass
-    # else:
-    #     # Apply queries with favourite airports and airlines
-    #     pass
+    User.create_user()
+    global current_user_email
     
     db = get_db()
     users_collection = db.users
-    existing_user = users_collection.find_one({'EMAIL': 'mohammad3pepe@yahoo.com'})
+    current_user_email = users_collection.find()[0]['EMAIL']
+    existing_user = users_collection.find_one({'EMAIL': current_user_email})
     global filtered_json_arr
+    global updated_airlines_fav
+    global updated_airports_fav
     global queriesDone
+    
     if not queriesDone:
         print("Perfrom Queries")
         queryManager.perform_airlines_queries(existing_user["FAVOURITES_AIRLINES"])
         queriesDone = True
-    print("Hello")
+        
+    if updated_airlines_fav == True:
+        queryManager.perform_airlines_queries(existing_user["FAVOURITES_AIRLINES"])
+        updated_airlines_fav = False
+        
     if filtered_json_arr is None: 
         json_arr = getAirlinesFigures(queryManager.airlines_delays,
                                     queryManager.airlines_security_delays,
@@ -267,28 +304,87 @@ def home():
     else:
         json_arr = filtered_json_arr
         no_delays=airlines_no_delays
-    # json_arr=[]
+        
     return render_template('home.html', register_form=form,
                            fav_airlines=existing_user["FAVOURITES_AIRLINES"],
-                           queries_done=queriesDone,
                            json_arr=json_arr,
-                           airlines_no_delays=no_delays)
+                           airlines_no_delays=no_delays,
+                           checked_airlines_arr=checked_airlines_arr)
 
+@main.route('/airports', methods=['GET', 'POST'])
+def airports():
+    User.create_user()
+    global current_user_email
+    
+    db = get_db()
+    users_collection = db.users
+    current_user_email = users_collection.find()[0]['EMAIL']
+    existing_user = users_collection.find_one({'EMAIL': current_user_email})
+    global updated_airports_fav
+    global queriesAirportsDone
+    
+    if not queriesAirportsDone:
+        print("Perfrom Queries")
+        queryManager.perform_airports_queries(existing_user["FAVOURITES_AIRPORTS"])
+        queriesAirportsDone = True
+        
+    if updated_airports_fav == True:
+        queryManager.perform_airports_queries(existing_user["FAVOURITES_AIRPORTS"])
+        updated_airports_fav = False
+        
+    global popular_airports_json
+    global most_traffic_airports_json 
+        
+    if popular_airports_json is None:
+        print("Hello 1")
+        print(queryManager.popular_airports)
+        popular_json, most_traffic_json = getAirportsFigures(queryManager.popular_airports,
+                                               queryManager.airports_with_most_traffic)
+        
+    else:
+        print("Hello 2")
+        popular_json = popular_airports_json
+        most_traffic_json = most_traffic_airports_json
+
+    return render_template('airports.html',
+                           fav_airports=existing_user["FAVOURITES_AIRPORTS"],
+                           popular_airports_json=popular_json,
+                           most_traffic_json=most_traffic_json,
+                           checked_airports_arr=checked_airports_arr)
+    
+    
 @main.route('/home/airlines/filter', methods=['POST'])
 def filtered_home_airlines():
-    print("Hello world")
-    ids = request.json["ids"]
 
-    f1, f2, f3, f4, f5 = queryManager.filter_airlines_queries(ids)
+    global checked_airlines_arr
+    
+    checked_airlines_arr = request.json["ids"]
+
+    f1, f2, f3, f4, f5 = queryManager.filter_airlines_queries(checked_airlines_arr)
     
     global filtered_json_arr
     global airlines_no_delays
     
     filtered_json_arr = getAirlinesFigures(f1,f2,f3,f4)
     airlines_no_delays = f5
-    return redirect(url_for('main.home'))
+    return redirect(url_for("main.home"))
     
+@main.route('/home/airports/filter', methods=['POST'])
+def filtered_home_airports():
+
+    global checked_airports_arr
     
+    checked_airports_arr = request.json["ids"]
+
+    f1, f2 = queryManager.filter_airports_queries(checked_airports_arr)
+
+    global popular_airports_json
+    global most_traffic_airports_json
+
+    popular_airports_json, most_traffic_airports_json =  getAirportsFigures(f1,f2)
+        
+    return redirect(url_for("main.airports"))
+
 # Register the blueprint
 app.register_blueprint(main)
 
