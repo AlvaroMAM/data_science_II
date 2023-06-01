@@ -11,30 +11,62 @@ body {
     color: #121212;
 }
 
-.title {
-    padding: 20px;
-    text-align: center;
+/* Style the tab */
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
     background-color: #EAEFF2;
+    text-align: right;
     margin-bottom: 20px;
-}
+  }
 
-.title h1 {
-    text-align: center;
-    font-size: 30px;
-    width: 80%;
-    margin: auto;
-    margin-bottom: 20px;
-}
+  .tab h2 {
+    margin: 10px 0px 0px 10px;
+    float: left;
+  }
+  
+  /* Style the buttons that are used to open the tab content */
+  .tab button {
+    background-color: inherit;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 0px;
+    width: 200px;
+    font-size: 20px;
+    transition: 0.3s;
+  }
+  
+  /* Change background color of buttons on hover */
+  .tab button:hover {
+    background-color: #e2e4e6;
+  }
+  
+  /* Create an active/current tablink class */
+  .tab button.active {
+    background-color: #d8dde0;
+  }
+  
+  /* Style the tab content */
+  .tabcontent {
+    display: none;
+    padding: 6px 12px;
+  }
 
-.ccc {
-    text-align: center;
-}
+  .tabcontent {
+    animation: fadeEffect 1s; /* Fading effect takes 1 second */
+  }
+  
+  /* Go from zero to full opacity */
+  @keyframes fadeEffect {
+    from {opacity: 0;}
+    to {opacity: 1;}
+  }
 
 .airlines_container,
 .airlports_container {
-    display: inline-block;
-    vertical-align: top;  
-    margin: 0 10px 0 10px;  
+    text-align: center;
+    margin: auto;  
     padding: 20px;
     background-color: white;
     width: 40%;
@@ -56,7 +88,7 @@ body {
 
 .select-dropdown, 
 .select-dropdown2 {
-    display: inline-block;
+    position: relative;
     background-color: #e6e6e6;
     width: auto;
     max-width: 250px;
