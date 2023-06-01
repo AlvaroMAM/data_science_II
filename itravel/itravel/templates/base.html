@@ -9,6 +9,9 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet">
+    
+    {% block head %}
+    {% endblock %}
 </head>
 
 <body>
@@ -25,13 +28,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for("main.home") }}">Home</a>
+                        <a class="nav-link" href="{{ url_for("main.home") }}">Airlines</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for("main.airports") }}">Airports</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for("main.load_profile") }}">Profile</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for("main.login") }}">Logout</a>
+                        <a class="nav-link" href="http://127.0.0.1:5555">Maps</a>
                     </li>
                 </ul>
             </div>

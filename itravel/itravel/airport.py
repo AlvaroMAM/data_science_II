@@ -4,7 +4,16 @@ class Airport:
     @staticmethod
     def get_all_airports():
         db = get_db()
-        airports = db.airports.find()
+        resutls = db.airports.find()
+        airports = []
+        for result in resutls:
+            airports.append(AirportModel(result["_id"],
+                                         result["IATA_CODE"],
+                                         result["AIRPORT"],
+                                         result["CITY"],
+                                         result["STATE"], 
+                                         result["COUNTRY"]))
+
         return airports
     
     @staticmethod
@@ -23,3 +32,19 @@ class Airport:
         ]
         result = db.flights.aggregate(pipeline)
         return list(result)
+
+class AirportModel:
+    id = ""
+    iata_code = ""
+    airport = ""
+    city = ""
+    state = ""
+    country = ""
+    
+    def __init__(self, id, iata_code, airport, city, state, country):
+        self.id = id
+        self.iata_code = iata_code
+        self.airport = airport
+        self.city = city
+        self.state = state
+        self.country = country

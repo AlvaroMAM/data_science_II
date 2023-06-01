@@ -4,7 +4,10 @@ class Airline:
     @staticmethod
     def get_all_airlines():
         db = get_db()
-        airlines = db.airlines.find()
+        results = db.airlines.find()
+        airlines = []
+        for result in results:
+            airlines.append(AirlineModel(result["_id"], result["IATA_CODE"], result["AIRLINE"]))
         return airlines
     
     @staticmethod
@@ -23,3 +26,13 @@ class Airline:
         ]
         result = db.flights.aggregate(pipeline)
         return list(result)
+    
+class AirlineModel:
+    id = ""
+    iata_code = ""
+    airline = ""
+    
+    def __init__(self, id, iata_code, airline):
+        self.id = id
+        self.iata_code = iata_code
+        self.airline = airline

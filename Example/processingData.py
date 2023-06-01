@@ -1,3 +1,13 @@
+#######################################################
+# Proyecto: iTravel                                   #
+# Autores: Aparicio Morales, Álvaro Manuel            #
+#          Kanaan Mohammed Suhail Najm                #
+# Asignatura: Ingeniería y Ciencia de Datos II        #
+# Máster Universitario en Ingeniería Informática      #
+# Universidad de Málaga                               #
+#######################################################
+
+
 import json
 import pandas as pd
 from pymongo import MongoClient
@@ -59,7 +69,7 @@ def insertDataMongo(mongocollection, csvfile):
 # Create connection to local db
 try:
     client = MongoClient('localhost', 27017)
-    db = client['data_visualization_project']
+    db = client['data_science_II_project']
     print("|-----------------------------------O-----------------------------------|")
     print("Message --> Connection with database established")
     print("|-----------------------------------O-----------------------------------|")

@@ -13,25 +13,24 @@
         <!-- Panel de filtros -->
         <div class="card mb-4">
             <div class="card-body">
-                <h5 class="card-title">Your Airlines</h5>
+                <h5 class="card-title">Your Airports</h5>
 
                 <div id="container">
 
-                    {% for airline in fav_airlines  %}
+                    {% for airport in fav_airports  %}
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="checkbox" id="{{airline["iata_code"]}}"
-                            value="{{airline["iata_code"]}}"  
-                            {% if checked_airlines_arr |count == 0 %}
+                        <input class="form-check-input" type="checkbox" id="{{airport["iata_code"]}}"
+                            value="{{airport["iata_code"]}}"  
+                            {% if checked_airports_arr |count == 0 %}
                                 checked
                             {% else %}
-                                {% if airline["iata_code"] in checked_airlines_arr %}
+                                {% if airport["iata_code"] in checked_airports_arr %}
                                 checked
                                 {% endif %}
                             {% endif %}
-
                             >
 
-                        <label class="form-check-label" for="inlineCheckbox1">{{airline["airline"]}} ({{airline["iata_code"]}})</label>
+                        <label class="form-check-label" for="inlineCheckbox1">{{airport["airport"]}} ({{airport["iata_code"]}})</label>
                     </div>
                     {% endfor %}
 
@@ -41,51 +40,29 @@
 
                 <button class="btn btn-primary" id="filter-btn">Filtrar</button>
 
-
-                <form action="/home" method="POST">
-
-                    <!-- Aquí puedes agregar los campos de filtro para las aerolíneas y los aeropuertos -->
-
-                </form>
             </div>
         </div>
     </div>
 
     <div class="charts_container">
 
-        {% for plot in json_arr %}
             <div class="chart">
-                <div id="{{ loop.index }}"></div>
+                <div id="popular_airports_json"></div>
                 <script>
-                    var chartData{{ loop.index }} = JSON.parse('{{ plot | safe }}');
-                    
-                    Plotly.newPlot('{{ loop.index }}', chartData{{ loop.index }}.data, chartData{{ loop.index }}.layout);
+                    var chartData = {{ popular_airports_json|safe }};
+                    Plotly.newPlot('popular_airports_json', chartData.data, chartData.layout);
                 </script>
             </div>
-        {% endfor %}
+
+            <div class="chart">
+                <div id="most_traffic_json"></div>
+                <script>
+                    var chartData2 = {{ most_traffic_json|safe }};
+                    Plotly.newPlot('most_traffic_json', chartData2.data, chartData2.layout);
+                </script>
+            </div>
 
     </div>
-
-    {% if fav_airports |count == 0 %}
-    {% else %}
-        <h4 class="airlines_title"> Airlines With No Delays </h3>
-
-            <div class="grid">
-                <div class="grid-cards">
-        
-                {% for airline in airlines_no_delays %}
-                
-                <div class="gridc-cards-inner">
-                    <img class="plane-icon" src="static/images/plane.png" alt="">
-                    <p class="airline"> {{ airline["airline_name"] }} </p>
-                </div>
-        
-                {% endfor %}
-        
-            </div>
-        </div>
-    {% endif %}
-    <br>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script>
@@ -106,13 +83,14 @@
                 checkedValues.push(value);
             }
         });
+        console.log(checkedValues)
 
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", "/home/airlines/filter");
+        xhr.open("POST", "/home/airports/filter");
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.send(JSON.stringify({
             ids: checkedValues,
-            tab: "airlines"
+            tab: "airports"
         }));
 
         xhr.onreadystatechange = function() {
