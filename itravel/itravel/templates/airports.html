@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="../static/css/home.css" />
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}
+
+
+
+{% block content %}
+
+    <div class="container mt-5">
+        <!-- Panel de filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Your Airports</h5>
+
+                <div id="container">
+
+                    {% for airport in fav_airports  %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="{{airport["iata_code"]}}"
+                            value="{{airport["iata_code"]}}"  
+                            {% if checked_airports_arr |count == 0 %}
+                                checked
+                            {% else %}
+                                {% if airport["iata_code"] in checked_airports_arr %}
+                                checked
+                                {% endif %}
+                            {% endif %}
+                            >
+
+                        <label class="form-check-label" for="inlineCheckbox1">{{airport["airport"]}} ({{airport["iata_code"]}})</label>
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+                <br>
+
+                <button class="btn btn-primary" id="filter-btn">Filtrar</button>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="charts_container">
+
+            <div class="chart">
+                <div id="popular_airports_json"></div>
+                <script>
+                    var chartData = {{ popular_airports_json|safe }};
+                    Plotly.newPlot('popular_airports_json', chartData.data, chartData.layout);
+                </script>
+            </div>
+
+            <div class="chart">
+                <div id="most_traffic_json"></div>
+                <script>
+                    var chartData2 = {{ most_traffic_json|safe }};
+                    Plotly.newPlot('most_traffic_json', chartData2.data, chartData2.layout);
+                </script>
+            </div>
+
+    </div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+
+    function refreshWindow() {
+        window.location.reload();
+    }
+
+    document.getElementById('filter-btn').addEventListener('click', function() {
+
+        const checkboxes = document.querySelectorAll('.form-check-input');
+        const checkedValues = [];
+    
+        checkboxes.forEach((checkbox) => {
+    
+            if (checkbox.checked) {
+                const value = checkbox.value;
+                checkedValues.push(value);
+            }
+        });
+        console.log(checkedValues)
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/home/airports/filter");
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhr.send(JSON.stringify({
+            ids: checkedValues,
+            tab: "airports"
+        }));
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                console.log("should refresh!!")
+                refreshWindow();
+            }
+        };
+        
+    });
+
+    // Aquí puedes agregar el código JavaScript para generar tus gráficos con Plotly
+</script>
+{% endblock %}
