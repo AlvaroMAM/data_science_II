@@ -28,3 +28,6 @@ class ChooseFavoritesForm(FlaskForm):
 
 class HomeForm(FlaskForm):
     submit = SubmitField('Find')
+    
+class ProfileForm(FlaskForm):
+    submit = SubmitField('Find')
