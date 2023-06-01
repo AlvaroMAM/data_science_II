@@ -8,14 +8,6 @@
 
 
 {% block content %}
-<!-- Tab links -->
-<div class="tab">
-    <button class="tablinks" onclick="openTab(event, 'airlines')" id="defaultOpen">Airlines</button>
-    <button class="tablinks" onclick="openTab(event, 'airports')">Airports</button>
-</div>
-
-<!-- Tab content -->
-<div id="airlines" class="tabcontent">
 
     <div class="container mt-5">
         <!-- Panel de filtros -->
@@ -24,10 +16,21 @@
                 <h5 class="card-title">Your Airlines</h5>
 
                 <div id="container">
+
                     {% for airline in fav_airlines  %}
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="checkbox" id="{{airline["iata_code"]}}"
-                            value="{{airline["iata_code"]}}" checked>
+                            value="{{airline["iata_code"]}}"  
+                            {% if checked_airlines_arr |count == 0 %}
+                                checked
+                            {% else %}
+                                {% if airline["iata_code"] in checked_airlines_arr %}
+                                checked
+                                {% endif %}
+                            {% endif %}
+
+                            >
+
                         <label class="form-check-label" for="inlineCheckbox1">{{airline["airline"]}} ({{airline["iata_code"]}})</label>
                     </div>
                     {% endfor %}
@@ -63,54 +66,32 @@
 
     </div>
 
-    <h4 class="airlines_title"> Airlines With No Delays </h3>
+    {% if fav_airports |count == 0 %}
+    {% else %}
+        <h4 class="airlines_title"> Airlines With No Delays </h3>
 
-    <div class="grid">
-        <div class="grid-cards">
-    
-            {% for airline in airlines_no_delays %}
-            
-            <div class="gridc-cards-inner">
-                <img class="plane-icon" src="static/images/plane.png" alt="">
-                <p class="airline"> {{ airline["airline_name"] }} </p>
+            <div class="grid">
+                <div class="grid-cards">
+        
+                {% for airline in airlines_no_delays %}
+                
+                <div class="gridc-cards-inner">
+                    <img class="plane-icon" src="static/images/plane.png" alt="">
+                    <p class="airline"> {{ airline["airline_name"] }} </p>
+                </div>
+        
+                {% endfor %}
+        
             </div>
-    
-            {% endfor %}
-    
         </div>
-    </div>
-
+    {% endif %}
     <br>
-
-</div>
-
-<div id="airports" class="tabcontent">
-    <h3>Airports</h3>
-    <p>Airports Description</p>
-</div>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script>
-    document.getElementById("defaultOpen").click();
 
-    function openTab(evt, tabName) {
-        var i, tabcontent, tablinks;
-
-        // Get all elements with class="tabcontent" and hide them
-        tabcontent = document.getElementsByClassName("tabcontent");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-        }
-
-        // Get all elements with class="tablinks" and remove the class "active"
-        tablinks = document.getElementsByClassName("tablinks");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
-
-        // Show the current tab, and add an "active" class to the button that opened the tab
-        document.getElementById(tabName).style.display = "block";
-        evt.currentTarget.className += " active";
+    function refreshWindow() {
+        window.location.reload();
     }
 
     document.getElementById('filter-btn').addEventListener('click', function() {
@@ -133,6 +114,13 @@
             ids: checkedValues,
             tab: "airlines"
         }));
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                console.log("should refresh!!")
+                refreshWindow();
+            }
+        };
         
     });
 
