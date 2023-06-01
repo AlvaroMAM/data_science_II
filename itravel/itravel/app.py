@@ -158,7 +158,7 @@ def getAirportsFigures(items1, items2):
 
     # Crear el layout de la gráfica
     layout = go.Layout(
-        title='Counts by Airport',
+        title='Airports with Highest Traffic',
         xaxis=dict(title='Airport'),
         yaxis=dict(title='Count')
     )
