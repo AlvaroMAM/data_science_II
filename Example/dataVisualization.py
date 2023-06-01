@@ -9,16 +9,16 @@ from pymongo import MongoClient
 import pandas as pd
 
 
-FLIGHTS_CSV_NAME='flights_data_frame.csv'
+FLIGHTS_CSV_NAME='dataset/flights_data_frame.csv'
 
 app = dash.Dash()
 
 # Connectamos con la base de datos para leer los aeropuertos y las aerolineas
-mongo_client = MongoClient('127.0.0.1', 27017)
-mongo_database = mongo_client['data_visualization_project']
+mongo_client = MongoClient('localhost', 27017)
+mongo_database = mongo_client['data_science_II_project']
 airport_collection = mongo_database['airports']
 airlines_collection = mongo_database['airlines']
-flights_collection = mongo_database['flights']
+
 airport_json = airport_collection.find({})
 airlines_json = airlines_collection.find({})
 
@@ -133,13 +133,13 @@ fig2 = px.line(top_5_most_delayed_airlines, x="YEAR", y="DELAY_MEAN", color='AIR
 
 # Definimos la estructura (layout) de la página web de salida ###################
 app.layout = html.Div(children=[
-    html.H1(children='ANÁLISIS VISUAL DE DATOS 2022'),
+    html.H1(children='CIENCIA DE DATOS 2023'),
 
     html.Div(children='''
-        Realizado por : Álvaro Manuel Aparicio Morales.
+        Realizado por : Data science II project
     '''),
     html.Div(children='''
-         Graduado en Ingeniería del Software.
+         MASTER EN INGENIERÍA INFORMÁTICA.
     '''),
 
     dcc.Graph(
@@ -170,5 +170,5 @@ def update_line_chart(airlines):
 
 
 if __name__ == '__main__': 
-    app.run_server()
+    app.run_server(port="5555")
 
